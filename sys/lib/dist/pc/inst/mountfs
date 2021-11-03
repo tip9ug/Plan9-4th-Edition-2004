@@ -1,0 +1,16 @@
+#!/bin/rc
+
+# desc: choose and mount file system partition
+# prereq: configfs
+
+switch($fstype){
+case kfs
+	exec mountkfs $*
+case fossil fossil+venti
+	exec mountfossil $*
+case *
+	mountfs=notdone
+	export mountfs
+	exit
+}
+

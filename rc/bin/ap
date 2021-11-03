@@ -1,0 +1,39 @@
+#!/bin/rc
+#
+#	get AP news headline list or the given story
+#
+
+tmp=/tmp/tmp.$pid
+wire='http://www.newsday.com/news/nationworld/wire'
+if ( ~ $#* 0 )
+	hget $wire | tee /tmp/ap.tmp |
+		htmlfmt -a -w 100 |
+		sed -n '
+			1,/On Wall Street/d
+			/AP News Wire/,$d
+			/^• / {
+				N
+				s/^• / /g
+				s/\n/ /g
+				s/\[\/news\/nationworld\/wire\//|/
+				s/,[0-9]+,[0-9]+\.story.*$//
+				p
+		}' |
+		awk -F '|' '
+			{
+			s = "";
+			for (i = 1; i < NF; i++)
+				s = s " " $i;
+			printf("ap %-40s # %s\n", $NF, s);
+		}'
+
+if not
+	hget $wire/^$1^.story |
+		htmlfmt |
+		sed '
+			s/\| Article licensing.*$//
+			/^Copyright ©/p
+			/^Copyright ©/,$d
+			1,/^Top Stories$/d
+			/^$/,/^$/d
+		'
